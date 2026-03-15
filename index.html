@@ -5,57 +5,100 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>חידון פסח - חומת שמואל</title>
     <style>
-        :root { --pink: #e91e63; --teal: #00bcd4; --gold: #d4af37; --light: #f4f7f6; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: var(--light); text-align: center; margin: 0; padding: 20px; }
-        .container { max-width: 600px; margin: auto; background: white; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 4px solid var(--teal); overflow: hidden; }
-        .header { background: var(--teal); color: white; padding: 20px; border-bottom: 4px solid var(--gold); }
-        .quiz-content { padding: 30px; }
-        .question { font-size: 22px; font-weight: bold; margin-bottom: 20px; color: #333; }
-        .option { display: block; width: 100%; padding: 12px; margin: 10px 0; border: 2px solid #ddd; border-radius: 10px; cursor: pointer; font-size: 18px; transition: 0.3s; background: #fff; }
-        .option:hover { background: #e0f7fa; border-color: var(--teal); }
-        .button { background: var(--pink); color: white; border: none; padding: 15px 30px; border-radius: 50px; cursor: pointer; font-size: 18px; font-weight: bold; margin-top: 20px; }
-        input { width: 80%; padding: 10px; margin: 10px 0; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; }
+        :root { --teal: #00bcd4; --pink: #e91e63; --gold: #d4af37; --bg: #f0f8f9; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); margin: 0; padding: 10px; text-align: center; }
+        .card { max-width: 600px; margin: 20px auto; background: white; border-radius: 25px; border: 4px solid var(--teal); box-shadow: 0 10px 20px rgba(0,0,0,0.1); overflow: hidden; }
+        .header { background: var(--teal); color: white; padding: 20px; border-bottom: 5px solid var(--gold); }
+        .content { padding: 25px; }
+        .q-text { font-size: 22px; font-weight: bold; margin-bottom: 20px; color: #333; }
+        .btn { display: block; width: 100%; padding: 15px; margin: 10px 0; border: 2px solid #ddd; border-radius: 12px; cursor: pointer; font-size: 18px; background: white; transition: 0.3s; }
+        .btn:hover { background: #e0f7fa; border-color: var(--teal); }
+        .start-btn { background: var(--pink); color: white; border: none; padding: 15px 40px; border-radius: 50px; font-size: 20px; cursor: pointer; }
+        input { width: 80%; padding: 12px; margin: 10px; border-radius: 10px; border: 1px solid #ccc; font-size: 16px; }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
 
-<div class="container">
+<div class="card">
     <div class="header">
-        <h1>חידון הלכות פסח - תשפ"ו</h1>
-        <p>בית הספר חומת שמואל</p>
+        <h1>חידון הפסח הגדול 🍷</h1>
+        <p>חומת שמואל | הרב ארנון אהרוני</p>
     </div>
-    
-    <div class="quiz-content" id="quiz-box">
-        <div id="setup">
-            <h3>ברוכים הבאים!</h3>
-            <p>הכניסו פרטים כדי להתחיל בחידון:</p>
-            <input type="text" id="pName" placeholder="שם מלא"><br>
-            <input type="text" id="pClass" placeholder="כיתה"><br>
-            <button class="button" onclick="start()">מתחילים!</button>
+
+    <div class="content">
+        <div id="start-screen">
+            <h3>תלמידים יקרים, מוכנים לאתגר?</h3>
+            <input type="text" id="studentName" placeholder="שם מלא">
+            <input type="text" id="studentClass" placeholder="כיתה">
+            <br>
+            <button class="start-btn" onclick="initQuiz()">בואו נתחיל!</button>
         </div>
-        
-        <div id="question-area" style="display:none;">
-            <div class="question" id="qText">כמה זמן לוקח לבצק להפוך לחמץ?</div>
-            <div id="options">
-                <button class="option" onclick="check(true)">18 דקות</button>
-                <button class="option" onclick="check(false)">24 דקות</button>
-                <button class="option" onclick="check(false)">שעה עגולה</button>
-            </div>
+
+        <div id="quiz-screen" class="hidden">
+            <div id="progress" style="color: var(--teal); margin-bottom: 10px;">שאלה 1 מתוך 60</div>
+            <div class="q-text" id="questionText">טוען שאלה...</div>
+            <div id="optionsContainer"></div>
+        </div>
+
+        <div id="end-screen" class="hidden">
+            <h2 style="color: var(--pink);">כל הכבוד!</h2>
+            <p id="finalScoreText"></p>
+            <button class="start-btn" onclick="location.reload()">שחק שוב</button>
         </div>
     </div>
 </div>
 
 <script>
-    function start() {
-        if(document.getElementById('pName').value == "") { alert("נא להזין שם"); return; }
-        document.getElementById('setup').style.display = 'none';
-        document.getElementById('question-area').style.display = 'block';
+    // רשימת שאלות חלקית (לדוגמה מהחוברת) - ניתן להוסיף כאן את כל ה-60
+    const questions = [
+        { q: "כמה זמן עובר מהוספת המים לקמח ועד שהבצק נהיה חמץ?", a: ["18 דקות", "24 דקות", "שעה", "12 דקות"], c: 0 },
+        { q: "מהו סדר הברכות בקידוש (ראשי תיבות)?", a: ["יקז", "זקי", "קיז", "יזק"], c: 0 },
+        { q: "מדוע בודקים חמץ דווקא עם נר בעל פתילה אחת?", a: ["כדי להגיע לחורים וסדקים", "כי זה יותר זול", "זכר למנורה", "כדי שלא יכבה"], c: 0 },
+        { q: "מהם 'מים שלנו'?", a: ["מים שנשאבו ולונו בלילה", "מים מהברז שלנו", "מים ששייכים לקהילה", "מי גשמים"], c: 0 },
+        { q: "מדוע אין אומרים תחנון בכל חודש ניסן?", a: ["כי רובו יצא בקדושה", "כי זה חודש האביב", "מנהג המצרים", "הוראת שעה"], c: 0 }
+        // ... כאן יבואו שאר השאלות עד 60
+    ];
+
+    let currentQ = 0;
+    let score = 0;
+
+    function initQuiz() {
+        if(!document.getElementById('studentName').value) return alert("אנא הזן שם");
+        document.getElementById('start-screen').classList.add('hidden');
+        document.getElementById('quiz-screen').classList.remove('hidden');
+        showQuestion();
     }
-    function check(isCorrect) {
-        if(isCorrect) { alert("כל הכבוד! תשובה נכונה לפי החוברת."); }
-        else { alert("לא נורא, כדאי לחזור על החומר בחוברת."); }
+
+    function showQuestion() {
+        const q = questions[currentQ];
+        document.getElementById('progress').innerText = `שאלה ${currentQ + 1} מתוך ${questions.length}`;
+        document.getElementById('questionText').innerText = q.q;
+        const container = document.getElementById('optionsContainer');
+        container.innerHTML = "";
+        
+        q.a.forEach((opt, index) => {
+            const btn = document.createElement('button');
+            btn.className = 'btn';
+            btn.innerText = opt;
+            btn.onclick = () => handleAnswer(index);
+            container.appendChild(btn);
+        });
+    }
+
+    function handleAnswer(idx) {
+        if(idx === questions[currentQ].c) score++;
+        currentQ++;
+        if(currentQ < questions.length) showQuestion();
+        else showEnd();
+    }
+
+    function showEnd() {
+        document.getElementById('quiz-screen').classList.add('hidden');
+        document.getElementById('end-screen').classList.remove('hidden');
+        document.getElementById('finalScoreText').innerText = `סיימת עם ${score} תשובות נכונות מתוך ${questions.length}!`;
     }
 </script>
 
 </body>
-</html>
+</html>vimeo.com/1172603161?fl=pl&fe=cm
